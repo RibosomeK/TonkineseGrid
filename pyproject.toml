@@ -1,0 +1,12 @@
+[project]
+name = "tonkinese-grid"
+description = "TextGrid library with type annotation"
+requires-python = ">=3.11"
+version = "2024.0.0a1"
+authors = [{ name = "RibosomeK" }]
+readme = "README.md"
+license = { file = "LICENSE" }
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
