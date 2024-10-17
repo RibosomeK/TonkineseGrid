@@ -1,11 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Iterator, Optional
 
-import re
-
-NUMERIC_PATTERN = re.compile(r"(\w* *\w+) *= *([\d.]+)")
-QUOTE_PATTERN = re.compile(r"(\w* *\w+) *= *\"(.*)\"")
-
 
 @dataclass(eq=True)
 class Interval:
