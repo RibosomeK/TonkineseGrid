@@ -348,32 +348,32 @@ class TextGrid:
 
     def __str__(self) -> str:
         string = (
-            'File type = "ooTextFile"\n'
-            + 'Object class = "TextGrid"\n'
-            + "\n"
-            + f"xmin = {self.min}\n"
-            + f"xmax = {self.max}\n"
+            f'File type = "ooTextFile"\n\
+            Object class = "TextGrid"\n\
+            \n\
+            xmin = {self.min}\n\
+            xmax = {self.max}\n'
         )
         if self.size() == 0:
             string += "tiers? <absent>\n"
         else:
-            string += "tiers? <exists>\n" + f"size = {self.size()}\n" + "item []:\n"
+            string += f"tiers? <exists>\nsize = {self.size()}\nitem []:\n"
         for idx, item in enumerate(self.items):
             string += (
-                f"{' ':4}item [{idx+1}]\n"
-                + f"{' ':8}class = \"IntervalTier\"\n"
-                + f"{' ':8}name = \"{item.name}\"\n"
-                + f"{' ':8}xmin = {item.min}\n"
-                + f"{' ':8}xmax = {item.max}\n"
-                + f"{' ':8}intervals: size = {item.size()}\n"
+                f"{' ':4}item [{idx+1}]\n\
+                {' ':8}class = \"IntervalTier\"\n\
+                {' ':8}name = \"{item.name}\"\n\
+                {' ':8}xmin = {item.min}\n\
+                {' ':8}xmax = {item.max}\n\
+                {' ':8}intervals: size = {item.size()}\n"
             )
             for jdx, ivl in enumerate(item):
                 text = ivl.text.replace('"', '""')
                 string += (
-                    f"{' ':12}intervals [{jdx+1}]\n"
-                    + f"{' ':16}xmin = {ivl.min}\n"
-                    + f"{' ':16}xmax = {ivl.max}\n"
-                    + f"{' ':16}text = \"{text}\"\n"
+                    f"{' ':12}intervals [{jdx+1}]\n\
+                    {' ':16}xmin = {ivl.min}\n\
+                    {' ':16}xmax = {ivl.max}\n\
+                    {' ':16}text = \"{text}\"\n"
                 )
         return string
 
