@@ -83,4 +83,4 @@ class TextGrid:
 
 ## Credit
 
-[pytextgrid](https://github.com/kylebgorman/textgrid)
+[textgrid](https://github.com/kylebgorman/textgrid)
