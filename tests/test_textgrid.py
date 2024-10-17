@@ -5,8 +5,17 @@ from tonkinese_grid import (
     NotContinuousError,
     NotEnoughSpaceError,
     TextGrid,
+    parse_text,
+    parse_num,
 )
 import pytest
+
+
+def test_parse():
+    assert parse_text('text = "říkej ""ahoj"" dvakrát"') == 'říkej "ahoj" dvakrát'
+    assert parse_text('class = "IntervalTier"') == "IntervalTier"
+    assert parse_num("xmin = 0.0") == 0.0
+    assert parse_num("xmax = 2.3") == 2.3
 
 
 def test_interval():

@@ -472,12 +472,14 @@ class ParseError(Exception):
 
 
 def parse_num(line: str) -> float:
-    if (match := NUMERIC_PATTERN.search(line)) is not None:
-        return float(match.group(2))
-    raise ParseError(line, "number")
+    try:
+        return float(line.split("=")[1].strip())
+    except Exception as e:
+        raise ParseError(line, f"number, due to {e}")
 
 
 def parse_text(line: str) -> str:
-    if (match := QUOTE_PATTERN.search(line)) is not None:
-        return match.group(2).replace('""', '"')
-    raise ParseError(line, "quote text")
+    try:
+        return line.split("=")[1].strip().replace('""', '"')[1:-1]
+    except Exception as e:
+        raise ParseError(line, f"text, due to {e}")
