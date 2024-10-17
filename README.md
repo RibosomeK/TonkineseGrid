@@ -6,6 +6,14 @@ This is a python library that can read and write a **subset** of [TextGrid file 
 
 ## Basic Usage
 
+Get started with installing the package.
+
+```bash
+pip install tonkinese_grid
+```
+
+Then you can use it like the following.
+
 ```python
 from tonkinese_grid import TextGrid
 
