@@ -2,7 +2,7 @@
 name = "tonkinese-grid"
 description = "A python library to read and write a subset of TextGrid file format"
 requires-python = ">=3.9"
-version = "2024.0.0a1"
+version = "2024.0.0a2"
 authors = [{ name = "RibosomeK" }]
 readme = "README.md"
 license = { file = "LICENSE" }
