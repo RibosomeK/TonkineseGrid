@@ -377,6 +377,31 @@ class TextGrid:
                 )
         return string
 
+    def __repr__(self) -> str:
+        string = (
+            f'File type = "ooTextFile"\n'
+            f'Object class = "TextGrid"\n'
+            f"\n"
+            f"{self.min}\n"
+            f"{self.max}\n"
+        )
+        if self.size() == 0:
+            string += "<absent>\n"
+        else:
+            string += f"<exists>\n{self.size()}\n"
+        for item in self.items:
+            string += (
+                f'"IntervalTier"\n'
+                f'"{item.name}"\n'
+                f"{item.min}\n"
+                f"{item.max}\n"
+                f"{item.size()}\n"
+            )
+            for ivl in item:
+                text = ivl.text.replace('"', '""')
+                string += f"{ivl.min}\n" f"{ivl.max}\n" f'"{text}"\n'
+        return string
+
     def __getitem__(self, idx: int) -> IntervalTier:
         return self.items[idx]
 
@@ -384,21 +409,27 @@ class TextGrid:
         self.items[idx] = tier
 
     @classmethod
-    def read(cls, file: str) -> "TextGrid":
-        """read from a file. currently only support `full text format`,
-        and `TextTier` is not supported. for more info please refer to [TextGrid file formats](https://www.fon.hum.uva.nl/praat/manual/TextGrid_file_formats.html)
+    def read(cls, file: str, encoding: str = "utf-8") -> "TextGrid":
+        """read from a file. But `TextTier` is not supported.
+        for more info please refer to [TextGrid file formats](https://www.fon.hum.uva.nl/praat/manual/TextGrid_file_formats.html)
 
         Exceptions:
             FileNotFoundError: cannot locate the file
             SyntaxError: failed to parse text labels or number labels
             ValueError: loading unsupported TextGrid file format
         """
-        with open(file, mode="r", encoding="utf-8") as fp:
+        try:
+            return TextGrid.read_full(file, encoding)
+        except ParseError:
+            return TextGrid.read_short(file, encoding)
+
+    @classmethod
+    def read_full(cls, file: str, encoding: str = "utf-8") -> "TextGrid":
+        with open(file, mode="r", encoding=encoding) as fp:
             lines = fp.readlines()
             textgrid = TextGrid(
                 parse_num(lines[3].strip()), parse_num(lines[4].strip()), []
             )
-
             item_count = round(parse_num(lines[6].strip()))
             lines = iter(lines[8:])
             for _ in range(item_count):
@@ -421,6 +452,34 @@ class TextGrid:
                     raise ValueError(f"Not Support Class: {class_type}")
             return textgrid
 
+    @classmethod
+    def read_short(cls, file: str, encoding: str = "utf-8") -> "TextGrid":
+        with open(file, mode="r", encoding=encoding) as fp:
+            lines = fp.readlines()
+            textgrid = TextGrid(
+                float(lines[3]),
+                float(lines[4]),
+            )
+            item_count = int(lines[6])
+            lines = iter(lines[7:])
+            for _ in range(item_count):
+                class_type = next(lines).strip()[1:-1]
+                if class_type == "IntervalTier":
+                    name = next(lines).strip()[1:-1]
+                    min = float(next(lines))
+                    max = float(next(lines))
+                    ivl_count = int(next(lines))
+                    tier = IntervalTier(min, max, name)
+                    for _ in range(ivl_count):
+                        min = float(next(lines))
+                        max = float(next(lines))
+                        text = next(lines).strip()[1:-1].replace('""', '"')
+                        tier.append_new(min, max, text)
+                    textgrid.append(tier)
+                else:
+                    raise ValueError(f"Not Support Class: {class_type}")
+        return textgrid
+
     def size(self) -> int:
         """how many items in the file, as same as the builtin `len()`"""
         return len(self.items)
@@ -429,14 +488,17 @@ class TextGrid:
         """return a full copy of TextGrid object"""
         return TextGrid(self.min, self.max, [item.copy() for item in self.items])
 
-    def save(self, path: str) -> None:
+    def save(self, path: str, format: str = "full", encoding: str = "utf-8") -> None:
         """save file to given location
 
         Exception:
             could be failed due to permission denied or given path is not valid
         """
-        with open(path, mode="w", encoding="utf-8") as fp:
-            fp.write(str(self))
+        with open(path, mode="w", encoding=encoding) as fp:
+            if format == "full":
+                fp.write(str(self))
+            else:
+                fp.write(repr(self))
 
     def append_new(self, min: float, max: float, name: str) -> None:
         """append new interval tier from raw data"""

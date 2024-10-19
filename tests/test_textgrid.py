@@ -110,7 +110,7 @@ def test_interval_list():
 
 
 def test_textgrid():
-    tg = TextGrid.read("./tests/sample/sample.TextGrid")
+    tg = TextGrid.read("./tests/sample/full.TextGrid")
     assert tg.size() == 2
     assert tg.min == 0
     assert tg.max == 2.3
@@ -128,3 +128,6 @@ def test_textgrid():
     assert tg[0].min == 1
     assert tg[0].max == 3
     assert tg[0].intervals.size() == 0
+
+    tg = TextGrid.read("./tests/sample/short.TextGrid", encoding="utf_16_be")
+    tg.save("./tests/sample/short.TextGrid", format="short", encoding="utf_16_be")
