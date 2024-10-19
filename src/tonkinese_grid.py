@@ -350,9 +350,9 @@ class TextGrid:
         string = (
             f'File type = "ooTextFile"\n'
             f'Object class = "TextGrid"\n'
-            f'\n'
-            f'xmin = {self.min}\n'
-            f'xmax = {self.max}\n'
+            f"\n"
+            f"xmin = {self.min}\n"
+            f"xmax = {self.max}\n"
         )
         if self.size() == 0:
             string += "tiers? <absent>\n"
