@@ -64,9 +64,9 @@ class IntervalList:
         start: Optional[int] = None,
         stop: Optional[int] = None,
         step: Optional[int] = None,
-    ) -> list[Interval]:
+    ) -> "IntervalList":
         """extra methods to get rid of type error when using slice in __getitem__"""
-        return self._data[start:stop:step]
+        return IntervalList(self._data[start:stop:step])
 
     def clear(self) -> None:
         """clear the list"""
@@ -94,6 +94,28 @@ class IntervalList:
             NotContinuousError: appending non continuous interval
         """
         self.append(Interval(min, max, text))
+
+    def extend(self, intervals: "IntervalList") -> None:
+        """extend intervals from other IntervalList
+
+        Raises:
+            NotContinuousError: extending non continuous intervals
+        """
+        if not intervals:
+            return
+        if Interval.is_continuous(self[-1], intervals[0]):
+            self._data.extend(intervals._data)
+        else:
+            raise NotContinuousError(self._data[-1], intervals[0])
+
+    def extend_from(self, intervals: list[Interval]) -> None:
+        """extend intervals from other list of Interval
+
+        Raises:
+            NotContinuousError: extending non continuous intervals
+        """
+        for ivl in intervals:
+            self.append(ivl)
 
     def replace(self, idx: int, text: str) -> None:
         """similar to `__setitem__`, but only replace the correspond text label,
@@ -232,7 +254,7 @@ class IntervalTier:
         start: Optional[int] = None,
         stop: Optional[int] = None,
         step: Optional[int] = None,
-    ) -> list[Interval]:
+    ) -> IntervalList:
         return self.intervals.slice(start, stop, step)
 
     def copy(self) -> "IntervalTier":
@@ -256,6 +278,22 @@ class IntervalTier:
             ValueError: appending non continuous interval
         """
         self.intervals.append_new(min, max, text)
+
+    def extend(self, intervals: IntervalList) -> None:
+        """extend intervals from other IntervalList
+
+        Raises:
+            NotContinuousError: extending non continuous intervals
+        """
+        self.intervals.extend(intervals)
+
+    def extend_from(self, intervals: list[Interval]) -> None:
+        """extend intervals from other list of Interval
+
+        Raises:
+            NotContinuousError: extending non continuous intervals
+        """
+        self.intervals.extend_from(intervals)
 
     def replace(self, idx: int, text: str) -> None:
         """similar to `__setitem__`, but only replace the correspond text label,
