@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Iterator, Optional
 
+from result import Ok, Err, Result
+
 
 @dataclass(eq=True)
 class Interval:
@@ -64,9 +66,9 @@ class IntervalList:
         start: Optional[int] = None,
         stop: Optional[int] = None,
         step: Optional[int] = None,
-    ) -> list[Interval]:
+    ) -> "IntervalList":
         """extra methods to get rid of type error when using slice in __getitem__"""
-        return self._data[start:stop:step]
+        return IntervalList(self._data[start:stop:step])
 
     def clear(self) -> None:
         """clear the list"""
@@ -94,6 +96,28 @@ class IntervalList:
             NotContinuousError: appending non continuous interval
         """
         self.append(Interval(min, max, text))
+
+    def extend(self, intervals: "IntervalList") -> None:
+        """extend intervals from other IntervalList
+
+        Raises:
+            NotContinuousError: extending non continuous intervals
+        """
+        if not intervals:
+            return
+        if Interval.is_continuous(self[-1], intervals[0]):
+            self._data.extend(intervals._data)
+        else:
+            raise NotContinuousError(self._data[-1], intervals[0])
+
+    def extend_from(self, intervals: list[Interval]) -> None:
+        """extend intervals from other list of Interval
+
+        Raises:
+            NotContinuousError: extending non continuous intervals
+        """
+        for ivl in intervals:
+            self.append(ivl)
 
     def replace(self, idx: int, text: str) -> None:
         """similar to `__setitem__`, but only replace the correspond text label,
@@ -232,7 +256,7 @@ class IntervalTier:
         start: Optional[int] = None,
         stop: Optional[int] = None,
         step: Optional[int] = None,
-    ) -> list[Interval]:
+    ) -> IntervalList:
         return self.intervals.slice(start, stop, step)
 
     def copy(self) -> "IntervalTier":
@@ -256,6 +280,22 @@ class IntervalTier:
             ValueError: appending non continuous interval
         """
         self.intervals.append_new(min, max, text)
+
+    def extend(self, intervals: IntervalList) -> None:
+        """extend intervals from other IntervalList
+
+        Raises:
+            NotContinuousError: extending non continuous intervals
+        """
+        self.intervals.extend(intervals)
+
+    def extend_from(self, intervals: list[Interval]) -> None:
+        """extend intervals from other list of Interval
+
+        Raises:
+            NotContinuousError: extending non continuous intervals
+        """
+        self.intervals.extend_from(intervals)
 
     def replace(self, idx: int, text: str) -> None:
         """similar to `__setitem__`, but only replace the correspond text label,
@@ -428,25 +468,74 @@ class TextGrid:
         with open(file, mode="r", encoding=encoding) as fp:
             lines = fp.readlines()
             textgrid = TextGrid(
-                parse_num(lines[3].strip()), parse_num(lines[4].strip()), []
+                parse_num(
+                    get_line(lines, 3).expect("Expect xmin line at line 4").strip()
+                ).expect("At line 4"),
+                parse_num(
+                    get_line(lines, 4).expect("Expect xmax line, at line 5").strip()
+                ).expect("At line 5"),
+                [],
             )
-            item_count = round(parse_num(lines[6].strip()))
-            lines = iter(lines[8:])
+            item_count = round(
+                parse_num(
+                    get_line(lines, 6).expect("Expect size line, at line 7").strip()
+                ).expect("At line 7")
+            )
+            lines = get_iter(lines, 8).expect("Expect more lines at line 8")
+            err_line_num = 9
             for _ in range(item_count):
-                next(lines)
-                class_type = parse_text(next(lines).strip())
+                get_next(lines).expect(f"Expect index line at line {err_line_num}")
+                class_type = parse_text(
+                    get_next(lines)
+                    .expect(f"Expect class line at line {err_line_num+1}")
+                    .strip()
+                ).expect(f"At line {err_line_num+1}")
                 if class_type == "IntervalTier":
-                    name = parse_text(next(lines).strip())
-                    min = parse_num(next(lines).strip())
-                    max = parse_num(next(lines).strip())
-                    ivl_count = round(parse_num(next(lines).strip()))
+                    name = parse_text(
+                        get_next(lines)
+                        .expect(f"Expect name line at line {err_line_num+2}")
+                        .strip()
+                    ).expect(f"At line {err_line_num+2}")
+                    min = parse_num(
+                        get_next(lines)
+                        .expect(f"Expect xmin line at line {err_line_num+3}")
+                        .strip()
+                    ).expect(f"At line {err_line_num+3}")
+                    max = parse_num(
+                        get_next(lines)
+                        .expect(f"Expect xmax line at line {err_line_num+4}")
+                        .strip()
+                    ).expect(f"At line {err_line_num+4}")
+                    ivl_count = round(
+                        parse_num(
+                            get_next(lines)
+                            .expect(f"Expect size line at line {err_line_num+5}")
+                            .strip()
+                        ).expect(f"At line {err_line_num+5}")
+                    )
                     tier = IntervalTier(min, max, name, IntervalList())
+                    err_line_num += 6
                     for _ in range(ivl_count):
-                        next(lines)
-                        min = parse_num(next(lines).strip())
-                        max = parse_num(next(lines).strip())
-                        text = parse_text(next(lines).strip())
+                        get_next(lines).expect(
+                            f"Expect index line at line {err_line_num}"
+                        )
+                        min = parse_num(
+                            get_next(lines)
+                            .expect(f"Expect xmin line at line {err_line_num+1}")
+                            .strip()
+                        ).expect(f"At line {err_line_num+1}")
+                        max = parse_num(
+                            get_next(lines)
+                            .expect(f"Expect xmax line at line {err_line_num+2}")
+                            .strip()
+                        ).expect(f"At line {err_line_num+2}")
+                        text = parse_text(
+                            get_next(lines)
+                            .expect(f"Expect text line at line {err_line_num+3}")
+                            .strip()
+                        ).expect(f"At line {err_line_num+3}")
                         tier.append(Interval(min, max, text))
+                        err_line_num += 4
                     textgrid.append(tier)
                 else:
                     raise ValueError(f"Not Support Class: {class_type}")
@@ -457,24 +546,60 @@ class TextGrid:
         with open(file, mode="r", encoding=encoding) as fp:
             lines = fp.readlines()
             textgrid = TextGrid(
-                float(lines[3]),
-                float(lines[4]),
+                to_float(get_line(lines, 3).expect("Expect xmin line at line 4")),
+                to_float(get_line(lines, 4).expect("Expect xmin line at line 5")),
             )
-            item_count = int(lines[6])
-            lines = iter(lines[7:])
+            item_count = to_int(get_line(lines, 6).expect("Expect size line at line 7"))
+            lines = get_iter(lines, 7).expect("Expect more lines at lines 8")
+            err_line_num = 8
             for _ in range(item_count):
-                class_type = next(lines).strip()[1:-1]
+                class_type = (
+                    get_next(lines)
+                    .expect(f"Expect class line at line {err_line_num}")
+                    .strip()[1:-1]
+                )
                 if class_type == "IntervalTier":
-                    name = next(lines).strip()[1:-1]
-                    min = float(next(lines))
-                    max = float(next(lines))
-                    ivl_count = int(next(lines))
+                    name = (
+                        get_next(lines)
+                        .expect(f"Expect name line at line {err_line_num+1}")
+                        .strip()[1:-1]
+                    )
+                    min = to_float(
+                        get_next(lines).expect(
+                            f"Expect xmin line at line {err_line_num+2}"
+                        )
+                    )
+                    max = to_float(
+                        get_next(lines).expect(
+                            f"Expect xmax line at line {err_line_num+3}"
+                        )
+                    )
+                    ivl_count = to_int(
+                        get_next(lines).expect(
+                            f"Expect size line at line {err_line_num+4}"
+                        )
+                    )
                     tier = IntervalTier(min, max, name)
+                    err_line_num += 5
                     for _ in range(ivl_count):
-                        min = float(next(lines))
-                        max = float(next(lines))
-                        text = next(lines).strip()[1:-1].replace('""', '"')
+                        min = to_float(
+                            get_next(lines).expect(
+                                f"Expect xmin line at line {err_line_num}"
+                            )
+                        )
+                        max = to_float(
+                            get_next(lines).expect(
+                                f"Expect xmin line at line {err_line_num+1}"
+                            )
+                        )
+                        text = (
+                            get_next(lines)
+                            .expect(f"Expect text line at line {err_line_num+2}")
+                            .strip()[1:-1]
+                            .replace('""', '"')
+                        )
                         tier.append_new(min, max, text)
+                        err_line_num += 3
                     textgrid.append(tier)
                 else:
                     raise ValueError(f"Not Support Class: {class_type}")
@@ -525,18 +650,53 @@ class NotEnoughSpaceError(Exception):
 
 class ParseError(Exception):
     def __init__(self, line: str, t: str) -> None:
-        super().__init__(f"Failed to parse line: {line} to get {t}")
+        super().__init__(f'Failed to parse line: "{line}" to get {t}')
 
 
-def parse_num(line: str) -> float:
+def get_line(lines: list[str], idx: int) -> Result[str, SyntaxError]:
     try:
-        return float(line.split("=")[1].strip())
-    except Exception as e:
-        raise ParseError(line, f"number, due to {e}")
+        return Ok(lines[idx])
+    except IndexError:
+        return Err(SyntaxError("Failed to get line"))
 
 
-def parse_text(line: str) -> str:
+def get_iter(lines: list[str], start: int) -> Result[Iterator[str], SyntaxError]:
     try:
-        return line.split("=")[1].strip().replace('""', '"')[1:-1]
+        return Ok(iter(lines[start:]))
+    except IndexError:
+        return Err(SyntaxError("Failed to get lines"))
+
+
+def get_next(lines: Iterator[str]) -> Result[str, SyntaxError]:
+    try:
+        return Ok(next(lines))
+    except StopIteration:
+        return Err(SyntaxError("Fail to get next line"))
+
+
+def parse_num(line: str) -> Result[float, ParseError]:
+    try:
+        return Ok(float(line.split("=")[1].strip()))
     except Exception as e:
-        raise ParseError(line, f"text, due to {e}")
+        return Err(ParseError(line, f"number, due to {e}"))
+
+
+def parse_text(line: str) -> Result[str, ParseError]:
+    try:
+        return Ok(line.split("=")[1].strip().replace('""', '"')[1:-1])
+    except Exception as e:
+        return Err(ParseError(line, f"text, due to {e}"))
+
+
+def to_float(num_str: str) -> float:
+    try:
+        return float(num_str)
+    except ValueError:
+        raise ParseError(num_str, f"number")
+
+
+def to_int(num_str: str) -> int:
+    try:
+        return int(num_str)
+    except ValueError:
+        raise ParseError(num_str, f"number")
