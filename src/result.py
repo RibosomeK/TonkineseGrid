@@ -5,8 +5,9 @@ T = TypeVar("T")
 E = TypeVar("E", bound=BaseException)
 
 
-@dataclass(slots=True)
+@dataclass
 class Ok(Generic[T]):
+    __slot__ = ("_value", )
     _value: T
 
     @property
@@ -20,8 +21,9 @@ class Ok(Generic[T]):
         return self._value
 
 
-@dataclass(slots=True)
+@dataclass
 class Err(Generic[E]):
+    __slot__ = ("_err", )
     _err: E
 
     @property
@@ -32,7 +34,13 @@ class Err(Generic[E]):
         raise self._err
 
     def expect(self, msg: str = "") -> NoReturn:
-        self._err.add_note(msg)
+        try:
+            self._err.add_note(msg)
+        except AttributeError:
+            if len(self._err.args) == 1:
+                self._err.args = (f"{self._err.args[0]}\n{msg}", )
+            else:
+                print(msg)
         raise self._err
 
 
