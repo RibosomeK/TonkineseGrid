@@ -1,0 +1,28 @@
+File type = "ooTextFile"
+Object class = "TextGrid"
+
+0.0
+2.3
+<exists>
+2
+"IntervalTier"
+"sentence"
+0.0
+2.3
+1
+0.0
+2.3
+"říkej ""ahoj"" dvakrát"
+"IntervalTier"
+"phonemes"
+0.0
+2.3
+3
+0.0
+0.7
+"r̝iːkɛj"
+0.7
+1.6
+"ʔaɦɔj"
+1.6
+2.3

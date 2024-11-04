@@ -12,10 +12,10 @@ import pytest
 
 
 def test_parse():
-    assert parse_text('text = "říkej ""ahoj"" dvakrát"') == 'říkej "ahoj" dvakrát'
-    assert parse_text('class = "IntervalTier"') == "IntervalTier"
-    assert parse_num("xmin = 0.0") == 0.0
-    assert parse_num("xmax = 2.3") == 2.3
+    assert parse_text('text = "říkej ""ahoj"" dvakrát"').value == 'říkej "ahoj" dvakrát'
+    assert parse_text('class = "IntervalTier"').value == "IntervalTier"
+    assert parse_num("xmin = 0.0").value == 0.0
+    assert parse_num("xmax = 2.3").value == 2.3
 
 
 def test_interval():
