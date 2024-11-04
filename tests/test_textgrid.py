@@ -129,5 +129,7 @@ def test_textgrid():
     assert tg[0].max == 3
     assert tg[0].intervals.size() == 0
 
-    tg = TextGrid.read("./tests/sample/short.TextGrid", encoding="utf_16_be")
+    tg = TextGrid.read(
+        "./tests/sample/short.TextGrid", format="short", encoding="utf_16_be"
+    )
     tg.save("./tests/sample/short.TextGrid", format="short", encoding="utf_16_be")

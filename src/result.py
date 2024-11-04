@@ -7,7 +7,7 @@ E = TypeVar("E", bound=BaseException)
 
 @dataclass
 class Ok(Generic[T]):
-    __slot__ = ("_value", )
+    __slot__ = ("_value",)
     _value: T
 
     @property
@@ -23,7 +23,7 @@ class Ok(Generic[T]):
 
 @dataclass
 class Err(Generic[E]):
-    __slot__ = ("_err", )
+    __slot__ = ("_err",)
     _err: E
 
     @property
@@ -38,7 +38,7 @@ class Err(Generic[E]):
             self._err.add_note(msg)
         except AttributeError:
             if len(self._err.args) == 1:
-                self._err.args = (f"{self._err.args[0]}\n{msg}", )
+                self._err.args = (f"{self._err.args[0]}\n{msg}",)
             else:
                 print(msg)
         raise self._err

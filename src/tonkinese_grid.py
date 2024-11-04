@@ -449,7 +449,9 @@ class TextGrid:
         self.items[idx] = tier
 
     @classmethod
-    def read(cls, file: str, encoding: str = "utf-8") -> "TextGrid":
+    def read(
+        cls, file: str, format: str = "full", encoding: str = "utf-8"
+    ) -> "TextGrid":
         """read from a file. But `TextTier` is not supported.
         for more info please refer to [TextGrid file formats](https://www.fon.hum.uva.nl/praat/manual/TextGrid_file_formats.html)
 
@@ -458,9 +460,9 @@ class TextGrid:
             SyntaxError: failed to parse text labels or number labels
             ValueError: loading unsupported TextGrid file format
         """
-        try:
+        if format == "full":
             return TextGrid.read_full(file, encoding)
-        except ParseError:
+        else:
             return TextGrid.read_short(file, encoding)
 
     @classmethod
