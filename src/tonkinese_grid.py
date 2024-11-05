@@ -457,8 +457,9 @@ class TextGrid:
 
         Exceptions:
             FileNotFoundError: cannot locate the file
-            SyntaxError: failed to parse text labels or number labels
-            ValueError: loading unsupported TextGrid file format
+            ParseError: failed to parse text labels or number labels
+            SyntaxError: uncompleted TextGrid file like missing lines
+            ValueError: loading TextGrid files which has TextTier class
         """
         if format == "full":
             return TextGrid.read_full(file, encoding)
