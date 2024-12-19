@@ -417,7 +417,7 @@ class TextGrid:
                 )
         return string
 
-    def __repr__(self) -> str:
+    def to_short_str(self) -> str:
         string = (
             f'File type = "ooTextFile"\n'
             f'Object class = "TextGrid"\n'
@@ -626,7 +626,7 @@ class TextGrid:
             if format == "full":
                 fp.write(str(self))
             else:
-                fp.write(repr(self))
+                fp.write(self.to_short_str())
 
     def append_new(self, min: float, max: float, name: str) -> None:
         """append new interval tier from raw data"""
