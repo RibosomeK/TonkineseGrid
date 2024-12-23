@@ -636,6 +636,59 @@ class TextGrid:
         """append new interval tier"""
         self.items.append(intervals)
 
+    def get_lineup_index(
+        self, tolerance: float = 0.05
+    ) -> list[list[tuple[int, int, int]]]:
+        """get lineup intervals.
+        Suppose we have three tiers: sentences -> words -> phonemes,
+        Which means we should have two list of lineup indexes:
+        ```
+            sentences -> words,
+            words -> phonemes
+        ```
+        Inside the tuple, are parent index, child start index, child end index (not included) respectively.
+        Take following TextGrid as example:
+        ```
+        sentences: |            hello   world          |
+        words:     |      hello       |      world     |
+        phonemes:  | hh | ax | l | ow | w | er | l | d |
+                   0    1    2   3    4   5    6   7   8
+        ```
+        it should return following list:
+        ```
+        [
+            # sentences -> words
+            [(0, 0, 2)],
+            # words -> phonemes
+            [(0, 0, 4), (1, 4, 8)],
+        ]
+        ```
+        Exception:
+            LineupError: could not lineup intervals under given tolerance
+        """
+
+        lineup: list[list[tuple[int, int, int]]] = []
+        if len(self) < 2:
+            return lineup
+
+        for idx in range(len(self) - 1):
+            parent = self[idx]
+            child = self[idx + 1]
+            indexes = []
+            if parent[0].min != child[0].min:
+                raise LineupError(idx, 0, 0)
+            start = 0
+            for p_idx, p_ivl in enumerate(parent):
+                for c_idx, c_ivl in enumerate(child.slice(start)):
+                    if abs(c_ivl.max - p_ivl.max) < tolerance:
+                        indexes.append((p_idx, start, c_idx + start + 1))
+                        start = start + c_idx + 1
+                        break
+                    if c_ivl.max - p_ivl.max > tolerance:
+                        raise LineupError(idx, p_idx, c_idx)
+            lineup.append(indexes)
+        return lineup
+
 
 class NotContinuousError(Exception):
     def __init__(self, prev: Interval, curr: Interval) -> None:
@@ -654,6 +707,13 @@ class NotEnoughSpaceError(Exception):
 class ParseError(Exception):
     def __init__(self, line: str, t: str) -> None:
         super().__init__(f'Failed to parse line: "{line}" to get {t}')
+
+
+class LineupError(Exception):
+    def __init__(self, p_tier_idx, p_idx: int, c_idx: int) -> None:
+        super().__init__(
+            f"Failed to get lineup index at parent tier: {p_tier_idx}, parent index: {p_idx}, child index: {c_idx}"
+        )
 
 
 def get_line(lines: list[str], idx: int) -> Result[str, SyntaxError]:
