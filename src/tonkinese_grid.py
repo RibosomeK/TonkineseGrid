@@ -637,7 +637,7 @@ class TextGrid:
         self.items.append(intervals)
 
     def get_lineup_index(
-        self, tolerance: float = 0.05
+        self, tolerance: float = 0.0001
     ) -> list[list[tuple[int, int, int]]]:
         """get lineup intervals.
         Suppose we have three tiers: sentences -> words -> phonemes,
