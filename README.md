@@ -6,7 +6,8 @@ This is a python library that can read and write a **subset** of [TextGrid file 
 
 ## Updates
 
-- 2024-10-19 short format and utf-16 encoding is supported in both reading and saving
+- 2024-10-19 
+    - short format and utf-16 encoding is supported in both reading and saving
 
 - 2024-11-05 
     - add better error messages while reading TextGrid files
@@ -15,6 +16,9 @@ This is a python library that can read and write a **subset** of [TextGrid file 
 
 - 2024-12-19
     - "rename" `__repr__()` to `to_short_str()` in class `TextGrid`
+
+- 2024-12-27
+    - add `get_lineup_index()` in class `TextGrid`
 
 ## Basic Usage
 
@@ -102,6 +106,7 @@ class TextGrid:
     def save(self, path: str, format: str="full", encoding: str="utf-8") -> None: ...
     def append_new(self, min: float, max: float, name: str) -> None: ...
     def append(self, intervals: IntervalTier) -> None: ...
+    def get_lineup_index(self, tolerance: float = 0.0001) -> list[list[tuple[int, int, int]]]: ...
 ```
 
 ## Credit
