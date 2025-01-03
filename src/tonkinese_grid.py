@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Iterator, Optional
+from typing import List, Tuple, Iterator, Optional
 
 from result import Ok, Err, Result
 
@@ -43,7 +43,7 @@ class Interval:
 
 @dataclass
 class IntervalList:
-    _data: list[Interval] = field(default_factory=list)
+    _data: List[Interval] = field(default_factory=list)
 
     def __str__(self) -> str:
         return f"Intervals: {', '.join([str(ivl) for ivl in self._data])}"
@@ -110,7 +110,7 @@ class IntervalList:
         else:
             raise NotContinuousError(self._data[-1], intervals[0])
 
-    def extend_from(self, intervals: list[Interval]) -> None:
+    def extend_from(self, intervals: List[Interval]) -> None:
         """extend intervals from other list of Interval
 
         Raises:
@@ -289,7 +289,7 @@ class IntervalTier:
         """
         self.intervals.extend(intervals)
 
-    def extend_from(self, intervals: list[Interval]) -> None:
+    def extend_from(self, intervals: List[Interval]) -> None:
         """extend intervals from other list of Interval
 
         Raises:
@@ -367,10 +367,10 @@ class IntervalTier:
 class TextGrid:
     min: float
     max: float
-    items: list[IntervalTier]
+    items: List[IntervalTier]
 
     def __init__(
-        self, min: float, max: float, items: Optional[list[IntervalTier]] = None
+        self, min: float, max: float, items: Optional[List[IntervalTier]] = None
     ) -> None:
         if min >= max:
             raise ValueError(f"min: {min} cannot smaller or equal than max: {max}")
@@ -638,7 +638,7 @@ class TextGrid:
 
     def get_lineup_index(
         self, tolerance: float = 0.0001
-    ) -> list[list[tuple[int, int, int]]]:
+    ) -> List[List[Tuple[int, int, int]]]:
         """get lineup intervals.
         Suppose we have three tiers: sentences -> words -> phonemes,
         Which means we should have two list of lineup indexes:
@@ -716,14 +716,14 @@ class LineupError(Exception):
         )
 
 
-def get_line(lines: list[str], idx: int) -> Result[str, SyntaxError]:
+def get_line(lines: List[str], idx: int) -> Result[str, SyntaxError]:
     try:
         return Ok(lines[idx])
     except IndexError:
         return Err(SyntaxError("Failed to get line"))
 
 
-def get_iter(lines: list[str], start: int) -> Result[Iterator[str], SyntaxError]:
+def get_iter(lines: List[str], start: int) -> Result[Iterator[str], SyntaxError]:
     try:
         return Ok(iter(lines[start:]))
     except IndexError:
